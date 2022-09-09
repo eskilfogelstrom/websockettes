@@ -4,96 +4,42 @@ import snareUrl from 'url:./samples/snare.wav';
 import hatUrl from 'url:./samples/hat.wav';
 import percUrl from 'url:./samples/perc.wav';
 
-
 const buttonConnect = document.getElementById('buttonConnect');
 buttonConnect.onclick = () => {
     const socket = connect();
 
-    const buttonTrigger = document.createElement('button');
-    buttonTrigger.innerText = 'Trigger';
-    // buttonTrigger.onclick = e => {
-    //     socket.emit('trigger');
-    // };
+    DeviceMotionEvent.requestPermission().then(() => {
+        let block = false;
+        let lastX, lastY, lastZ;
+        let lastTriggerTime = performance.now();
+        window.addEventListener('devicemotion', e => {
 
-    // buttonTrigger.ontouchstart = () => {
-    //     socket.emit('trigger');
-    // }
+            const acc = e.acceleration;
 
+            const deltaX = Math.abs(acc.x - lastX);
+            const deltaY = Math.abs(acc.y - lastY);
+            const deltaZ = Math.abs(acc.z - lastZ);
 
-    let time = performance.now();
-    const loop = () => {
-        if (performance.now() - time >= 1000) {
-            socket.emit('trigger');
-            console.log('Emit:', performance.now());
-            time = performance.now();
-        }
-        window.requestAnimationFrame(loop);
-    };
+            if (deltaX + deltaY + deltaZ > 20) {
+                if (performance.now() - lastTriggerTime > 30) {
+                    if (!block) {
+                        socket.emit('trigger');
+                        lastTriggerTime = performance.now();
+                        block = true;
+                    }
+                }
+            }
 
-    loop();
+            if (deltaX + deltaY + deltaZ < 5) {
+                block = false;
+            }
 
+            lastX = acc.x;
+            lastY = acc.y;
+            lastZ = acc.z;
 
-
-    // DeviceMotionEvent.requestPermission().then(() => {
-    //     let block = false;
-    //     let lastX, lastY, lastZ;
-    //     let lastTriggerTime = performance.now();
-    //     window.addEventListener('devicemotion', e => {
-
-    //         const acc = e.acceleration;
-
-    //         const deltaX = Math.abs(acc.x - lastX);
-    //         const deltaY = Math.abs(acc.y - lastY);
-    //         const deltaZ = Math.abs(acc.z - lastZ);
-
-    //         if (deltaX + deltaY + deltaZ > 20) {
-    //             if (performance.now() - lastTriggerTime > 30) {
-    //                 if (!block) {
-    //                     socket.emit('trigger');
-    //                     lastTriggerTime = performance.now();
-    //                     block = true;
-    //                 }
-    //             }
-    //         }
-
-    //         if (deltaX + deltaY + deltaZ < 5) {
-    //             block = false;
-    //         }
-
-    //         lastX = acc.x;
-    //         lastY = acc.y;
-    //         lastZ = acc.z;
-
-
-
-    //         // if (!block && e.rotationRate.alpha > 300) {
-    //         //     socket.emit('trigger');
-
-    //         //     block = true;
-
-    //         //     setTimeout(() => {
-    //         //         block = false;
-    //         //     }, 20);
-    //         // }
-    //     });
-    //     window.addEventListener('deviceorientation', e => {
-            
-    //         document.getElementById('debug').innerHTML = `
-    //             Alpha: ${e.alpha}<br>
-    //             Beta: ${e.beta}<br>
-    //             Gamma: ${e.gamma}
-    //         `;
-            
-    //         // if (!block && (e.beta < 50 && e.beta > 40)) {
-    //         //     socket.emit('trigger');
-
-    //         //     block = true;
-    //         //     setTimeout(() => {
-    //         //         block = false;
-    //         //     }, 50);
-    //         // }
-    //     });
-    // });
+        });
+    });
 
     buttonConnect.remove();
     document.body.appendChild(buttonTrigger);
@@ -101,7 +47,7 @@ buttonConnect.onclick = () => {
 
 
 const connect = () => {
-    const socket = io('ws://localhost:3000');
+    const socket = io('ws://164.92.187.171');
 
     socket.on('setInstrument', msg => {
         console.log(msg);

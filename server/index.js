@@ -15,7 +15,8 @@ const state = {
   instruments: {
     'kick': null,
     'snare': null,
-    'hihat': null,
+    'hat': null,
+    'perc': null
   },
   users: [{
     id: '',
@@ -28,7 +29,7 @@ const getInstrument = socketId =>
 
 io.on('connection', (socket) => {
   const availableInstrument = Object.keys(state.instruments)
-    .filter(instrument => !state.instruments[instrument])[0];
+    .filter(instrument => state.instruments[instrument] === null)[0];
 
   state.instruments[availableInstrument] = socket.id;
   state.users.push({ id: socket.id });

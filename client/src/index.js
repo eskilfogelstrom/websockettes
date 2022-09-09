@@ -8,41 +8,42 @@ const buttonConnect = document.getElementById('buttonConnect');
 buttonConnect.onclick = () => {
     const socket = connect();
 
-    DeviceMotionEvent.requestPermission().then(() => {
-        let block = false;
-        let lastX, lastY, lastZ;
-        let lastTriggerTime = performance.now();
-        window.addEventListener('devicemotion', e => {
+    if (DeviceMotionEvent) {
+        DeviceMotionEvent.requestPermission().then(() => {
+            let block = false;
+            let lastX, lastY, lastZ;
+            let lastTriggerTime = performance.now();
+            window.addEventListener('devicemotion', e => {
 
-            const acc = e.acceleration;
+                const acc = e.acceleration;
 
-            const deltaX = Math.abs(acc.x - lastX);
-            const deltaY = Math.abs(acc.y - lastY);
-            const deltaZ = Math.abs(acc.z - lastZ);
+                const deltaX = Math.abs(acc.x - lastX);
+                const deltaY = Math.abs(acc.y - lastY);
+                const deltaZ = Math.abs(acc.z - lastZ);
 
-            if (deltaX + deltaY + deltaZ > 20) {
-                if (performance.now() - lastTriggerTime > 30) {
-                    if (!block) {
-                        socket.emit('trigger');
-                        lastTriggerTime = performance.now();
-                        block = true;
+                if (deltaX + deltaY + deltaZ > 20) {
+                    if (performance.now() - lastTriggerTime > 30) {
+                        if (!block) {
+                            socket.emit('trigger');
+                            lastTriggerTime = performance.now();
+                            block = true;
+                        }
                     }
                 }
-            }
 
-            if (deltaX + deltaY + deltaZ < 5) {
-                block = false;
-            }
+                if (deltaX + deltaY + deltaZ < 5) {
+                    block = false;
+                }
 
-            lastX = acc.x;
-            lastY = acc.y;
-            lastZ = acc.z;
+                lastX = acc.x;
+                lastY = acc.y;
+                lastZ = acc.z;
 
+            });
         });
-    });
+    }
 
     buttonConnect.remove();
-    document.body.appendChild(buttonTrigger);
 }
 
 
